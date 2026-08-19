@@ -1,0 +1,73 @@
+# ============================================================
+# Azure Cost Reporting - Git exclusions
+# ============================================================
+
+# ------------------------------------------------------------
+# Local environment configuration
+# ------------------------------------------------------------
+config/config.sh
+config/subscriptions.csv
+config/*.local
+config/*.secret
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# ------------------------------------------------------------
+# Secrets / credentials / certificates
+# ------------------------------------------------------------
+*.key
+*.pem
+*.pfx
+*.p12
+*.cer
+*.crt
+*.secret
+
+# ------------------------------------------------------------
+# Generated cost data and reports
+# ------------------------------------------------------------
+output/
+downloads/
+data/
+logs/
+
+*.csv
+*.xlsx
+*.xls
+*.zip
+*.gz
+
+# Allow safe example configuration datasets
+!config/subscriptions.example.csv
+
+# ------------------------------------------------------------
+# Python
+# ------------------------------------------------------------
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# ------------------------------------------------------------
+# Editors / operating systems
+# ------------------------------------------------------------
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# ------------------------------------------------------------
+# Temporary / backup files
+# ------------------------------------------------------------
+*.tmp
+*.temp
+*.bak
+*~
+
+# Development backup files
+*.bak
+*.before-*
+*.pre-*
