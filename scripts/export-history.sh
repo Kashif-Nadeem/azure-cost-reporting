@@ -454,10 +454,15 @@ while [[ "$PERIOD" < "$CURRENT_PERIOD" || "$PERIOD" == "$CURRENT_PERIOD" ]]; do
     YEAR="${PERIOD%-*}"
     MONTH="${PERIOD#*-}"
 
-    END_DATE="$(month_end_date "$YEAR" "$MONTH")"
+    # Azure Cost Management stores monthly exports under a folder
+    # representing the full calendar month, even when the current
+    # month's execution ends at the current date.
+    STORAGE_MONTH_END="$(
+        date -u             -d "${YEAR}-${MONTH}-01 +1 month -1 day"             +%Y-%m-%d
+    )"
 
     START_COMPACT="${YEAR}${MONTH}01"
-    END_COMPACT="${END_DATE//-/}"
+    END_COMPACT="${STORAGE_MONTH_END//-/}"
 
     DATE_RANGE="${START_COMPACT}-${END_COMPACT}"
 
