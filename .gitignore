@@ -71,3 +71,8 @@ Thumbs.db
 *.bak
 *.before-*
 *.pre-*
+
+# Python virtual environment
+.venv/
+__pycache__/
+*.pyc
