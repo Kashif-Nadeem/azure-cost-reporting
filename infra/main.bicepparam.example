@@ -1,0 +1,23 @@
+using './main.bicep'
+
+param location = 'centralus'
+
+param functionAppName = 'func-example-cost-reporting'
+param functionPlanName = 'plan-example-cost-reporting'
+param functionStorageAccountName = 'stexamplecostreport'
+param managedIdentityName = 'id-example-cost-reporting'
+
+param applicationInsightsName = 'appi-example-cost-reporting'
+param logAnalyticsWorkspaceName = 'log-example-cost-reporting'
+
+param reportStorageAccountName = 'stexamplereports'
+param reportContainerName = 'azure-invoice-reports'
+
+param pythonRuntimeVersion = '3.14'
+
+param monthlyReportSchedule = '0 0 13 5 * *'
+
+param reportMonthOverride = ''
+param reportRecipients = ''
+param reportSender = ''
+param emailEnabled = false
