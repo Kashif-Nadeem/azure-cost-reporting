@@ -1,0 +1,16 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "FUNCTIONS_WORKER_RUNTIME": "python",
+    "MONTHLY_REPORT_SCHEDULE": "0 0 13 5 * *",
+    "AZURE_CLIENT_ID": "<managed-identity-client-id>",
+    "REPORT_STORAGE_ACCOUNT": "<report-storage-account>",
+    "REPORT_CONTAINER": "<report-container>",
+    "REPORT_RECIPIENTS": "<recipient-list>",
+    "REPORT_SENDER": "<sender-mailbox>",
+    "REPORT_SUBJECT_PREFIX": "Azure Invoice Expense Report",
+    "EMAIL_ENABLED": "false",
+    "BILLING_API_VERSION": "2024-04-01",
+    "SUBSCRIPTIONS_API_VERSION": "2022-12-01"
+  }
+}

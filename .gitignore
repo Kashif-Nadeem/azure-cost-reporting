@@ -76,3 +76,4 @@ Thumbs.db
 .venv/
 __pycache__/
 *.pyc
+function_app/local.settings.json
