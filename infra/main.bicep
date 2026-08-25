@@ -360,8 +360,6 @@ resource functionApp 'Microsoft.Web/sites@2024-04-01' = {
     name: 'appsettings'
 
     properties: {
-      FUNCTIONS_WORKER_RUNTIME: 'python'
-
       AzureWebJobsStorage__accountName: functionStorage.name
       AzureWebJobsStorage__credential: 'managedidentity'
       AzureWebJobsStorage__clientId: managedIdentity.properties.clientId
