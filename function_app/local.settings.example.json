@@ -6,11 +6,16 @@
     "AZURE_CLIENT_ID": "<managed-identity-client-id>",
     "REPORT_STORAGE_ACCOUNT": "<report-storage-account>",
     "REPORT_CONTAINER": "<report-container>",
-    "REPORT_RECIPIENTS": "<recipient-list>",
-    "REPORT_SENDER": "<sender-mailbox>",
+    "REPORT_RECIPIENTS": "<recipient@example.com>",
     "REPORT_SUBJECT_PREFIX": "Azure Invoice Expense Report",
     "EMAIL_ENABLED": "false",
     "BILLING_API_VERSION": "2024-04-01",
-    "SUBSCRIPTIONS_API_VERSION": "2022-12-01"
+    "SUBSCRIPTIONS_API_VERSION": "2022-12-01",
+    "KEY_VAULT_URL": "<key-vault-url>",
+    "SMTP_HOST": "smtp.gmail.com",
+    "SMTP_PORT": "587",
+    "SMTP_USERNAME_SECRET_NAME": "smtp-username",
+    "SMTP_FROM_ADDRESS_SECRET_NAME": "smtp-from-address",
+    "SMTP_PASSWORD_SECRET_NAME": "smtp-app-password"
   }
 }

@@ -19,5 +19,10 @@ param monthlyReportSchedule = '0 0 13 5 * *'
 
 param reportMonthOverride = ''
 param reportRecipients = ''
-param reportSender = ''
+param keyVaultName = 'kv-example-cost-reporting'
+param smtpHost = 'smtp.gmail.com'
+param smtpPort = 587
+param smtpUsernameSecretName = 'smtp-username'
+param smtpFromAddressSecretName = 'smtp-from-address'
+param smtpPasswordSecretName = 'smtp-app-password'
 param emailEnabled = false

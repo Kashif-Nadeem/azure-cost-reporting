@@ -52,8 +52,23 @@ param reportMonthOverride string = ''
 @description('Comma-separated report recipient addresses. Configure in Azure, not source control.')
 param reportRecipients string = ''
 
-@description('Mailbox used to send reports. Configure in Azure, not source control.')
-param reportSender string = ''
+@description('Name of the Key Vault that stores SMTP secrets.')
+param keyVaultName string
+
+@description('SMTP server hostname.')
+param smtpHost string = 'smtp.gmail.com'
+
+@description('SMTP server port.')
+param smtpPort int = 587
+
+@description('Key Vault secret name containing the SMTP username.')
+param smtpUsernameSecretName string = 'smtp-username'
+
+@description('Key Vault secret name containing the From address.')
+param smtpFromAddressSecretName string = 'smtp-from-address'
+
+@description('Key Vault secret name containing the SMTP password.')
+param smtpPasswordSecretName string = 'smtp-app-password'
 
 @description('Controls whether email delivery is enabled.')
 param emailEnabled bool = false
@@ -376,7 +391,12 @@ resource functionApp 'Microsoft.Web/sites@2024-04-01' = {
       REPORT_CONTAINER: reportContainer.name
 
       REPORT_RECIPIENTS: reportRecipients
-      REPORT_SENDER: reportSender
+      KEY_VAULT_URL: 'https://${keyVaultName}${environment().suffixes.keyvaultDns}/'
+      SMTP_HOST: smtpHost
+      SMTP_PORT: string(smtpPort)
+      SMTP_USERNAME_SECRET_NAME: smtpUsernameSecretName
+      SMTP_FROM_ADDRESS_SECRET_NAME: smtpFromAddressSecretName
+      SMTP_PASSWORD_SECRET_NAME: smtpPasswordSecretName
       REPORT_SUBJECT_PREFIX: reportSubjectPrefix
       EMAIL_ENABLED: emailEnabled ? 'true' : 'false'
 

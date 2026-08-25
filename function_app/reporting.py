@@ -1,29 +1,31 @@
-import base64
 import csv
 import io
 import json
 import logging
 import os
+import smtplib
+import ssl
 import time
 from collections import defaultdict
 from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal, ROUND_HALF_UP
+from email.message import EmailMessage
 from urllib.parse import urlencode
 
 import requests
 from azure.identity import DefaultAzureCredential
+from azure.keyvault.secrets import SecretClient
 from azure.storage.blob import BlobServiceClient, ContentSettings
 
 
 ARM_SCOPE = "https://management.azure.com/.default"
-GRAPH_SCOPE = "https://graph.microsoft.com/.default"
-
 DEFAULT_BILLING_API_VERSION = "2024-04-01"
 DEFAULT_SUBSCRIPTIONS_API_VERSION = "2022-12-01"
 
 MONEY = Decimal("0.01")
 
 _credential = None
+_secret_client = None
 
 
 def _env(name, default=None, required=False):
@@ -48,6 +50,31 @@ def _credential_client():
         )
 
     return _credential
+
+
+def _secret_client_instance():
+    global _secret_client
+
+    if _secret_client is None:
+        vault_url = _env("KEY_VAULT_URL", required=True)
+
+        _secret_client = SecretClient(
+            vault_url=vault_url,
+            credential=_credential_client(),
+        )
+
+    return _secret_client
+
+
+def _secret(name):
+    secret = _secret_client_instance().get_secret(name)
+
+    if secret.value is None:
+        raise RuntimeError(
+            f"Key Vault secret has no value: {name}"
+        )
+
+    return secret.value
 
 
 def _token(scope):
@@ -585,8 +612,6 @@ def _send_email(
     detail_name,
     detail_csv,
 ):
-    sender = _env("REPORT_SENDER", required=True)
-
     recipients = [
         item.strip()
         for item in _env(
@@ -600,6 +625,42 @@ def _send_email(
         raise RuntimeError(
             "REPORT_RECIPIENTS contains no recipients."
         )
+
+    username_secret_name = _env(
+        "SMTP_USERNAME_SECRET_NAME",
+        "smtp-username",
+    )
+
+    from_secret_name = _env(
+        "SMTP_FROM_ADDRESS_SECRET_NAME",
+        "smtp-from-address",
+    )
+
+    password_secret_name = _env(
+        "SMTP_PASSWORD_SECRET_NAME",
+        "smtp-app-password",
+    )
+
+    smtp_username = _secret(username_secret_name)
+    from_address = _secret(from_secret_name)
+    smtp_password = _secret(password_secret_name)
+
+    smtp_host = _env(
+        "SMTP_HOST",
+        "smtp.gmail.com",
+    )
+
+    try:
+        smtp_port = int(
+            _env(
+                "SMTP_PORT",
+                "587",
+            )
+        )
+    except ValueError as exc:
+        raise RuntimeError(
+            "SMTP_PORT must be an integer."
+        ) from exc
 
     prefix = _env(
         "REPORT_SUBJECT_PREFIX",
@@ -617,65 +678,59 @@ def _send_email(
         "Billing invoice data."
     )
 
-    attachments = []
+    message = EmailMessage()
+    message["Subject"] = subject
+    message["From"] = from_address
+    message["To"] = ", ".join(recipients)
+    message.set_content(body)
 
-    for filename, content in (
-        (summary_name, summary_csv),
-        (detail_name, detail_csv),
-    ):
-        attachments.append(
-            {
-                "@odata.type":
-                    "#microsoft.graph.fileAttachment",
-                "name": filename,
-                "contentType": "text/csv",
-                "contentBytes": base64.b64encode(
-                    content
-                ).decode("ascii"),
-            }
-        )
-
-    payload = {
-        "message": {
-            "subject": subject,
-            "body": {
-                "contentType": "Text",
-                "content": body,
-            },
-            "toRecipients": [
-                {
-                    "emailAddress": {
-                        "address": recipient
-                    }
-                }
-                for recipient in recipients
-            ],
-            "attachments": attachments,
-        },
-        "saveToSentItems": True,
-    }
-
-    url = (
-        "https://graph.microsoft.com/v1.0/"
-        f"users/{sender}/sendMail"
+    message.add_attachment(
+        summary_csv,
+        maintype="text",
+        subtype="csv",
+        filename=summary_name,
     )
 
-    response = requests.post(
-        url,
-        headers={
-            **_headers(GRAPH_SCOPE),
-            "Content-Type": "application/json",
-        },
-        json=payload,
-        timeout=90,
+    message.add_attachment(
+        detail_csv,
+        maintype="text",
+        subtype="csv",
+        filename=detail_name,
     )
 
-    if response.status_code not in (200, 202):
+    tls_context = ssl.create_default_context()
+
+    try:
+        with smtplib.SMTP(
+            smtp_host,
+            smtp_port,
+            timeout=90,
+        ) as smtp:
+            smtp.ehlo()
+            smtp.starttls(context=tls_context)
+            smtp.ehlo()
+            smtp.login(
+                smtp_username,
+                smtp_password,
+            )
+            smtp.send_message(
+                message,
+                from_addr=from_address,
+                to_addrs=recipients,
+            )
+
+    except (
+        smtplib.SMTPException,
+        OSError,
+    ) as exc:
         raise RuntimeError(
-            "Email delivery failed: "
-            f"HTTP {response.status_code} "
-            f"{response.text[:2000]}"
-        )
+            f"SMTP email delivery failed: {exc}"
+        ) from exc
+
+    logging.info(
+        "Report email sent successfully to %d recipient(s).",
+        len(recipients),
+    )
 
 
 def run_monthly_report():
